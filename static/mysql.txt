@@ -1,0 +1,52 @@
+我想做一个类似gpt的人机对话应用。现在我要为应用构建数据库my_chat。
+首先每个用户user拥有信息：账户名、密码、唯一标识userid、邮箱；每个对话框dialog拥有信息：
+唯一标识dialogid、拥有该对话框的userid（外键约束，当用户被删除时该对话框级联删除）
+
+CREATE DATABASE my_chat
+CHARACTER SET gbk
+COLLATE gbk_chinese_ci;
+
+CREATE TABLE users
+(
+account_name CHAR(15) NOT NULL,
+password CHAR(20) NOT NULL,
+user_id INT AUTO_INCREMENT PRIMARY KEY,
+email CHAR(20)
+);
+
+CREATE TABLE dialogs (
+    dialog_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    message VARCHAR(500),
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_user BOOLEAN,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE images (
+    image_id INT AUTO_INCREMENT PRIMARY KEY,
+    dialog_id INT,
+    image MEDIUMBLOB,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (dialog_id) REFERENCES dialogs(dialog_id) ON DELETE CASCADE
+);
+
+% 登陆验证用户
+delimiter $$
+create procedure sign_in
+(in account char(15),in pass_word char(20))
+begin
+declare temp_account char(15);
+declare temp_password char(20);
+declare result tinyint;
+select account_name into temp_account from users;
+select password into temp_password from users;
+IF account=temp_account and pass_word=temp_password then
+set result=1;
+else
+set result=0;
+end if;
+select result;
+end$$
+delimiter ;
+
