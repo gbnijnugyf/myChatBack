@@ -1,14 +1,15 @@
 from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime, timedelta
 from src.application import db, cipher_suite
+from src.interceptors.auth import cookie_check
 from src.models.DTO import ReturnDTO, SessionTextDTO, SessionRecordDTO, DataDTO
 
 user = Blueprint("user", __name__)
 
 
 @user.route("/login", methods=["POST"])
+# @cookie_check
 def login():
-    """管理员登录"""
     try:
         username = str(request.json.get("name"))
         password = str(request.json.get("password"))
@@ -23,7 +24,7 @@ def login():
         if ret == 0:  # 验证登录状态
             raise Exception("账号或密码错误")
 
-        nextTime = datetime.now() + timedelta(seconds=120)
+        nextTime = datetime.now() + timedelta(seconds=1200)  # 1200秒后失效
         message = "{}-{}-{}".format(
             username, password, nextTime.strftime("%Y#%m#%d#%H:%M:%S")
         ).encode("utf-8")

@@ -47,6 +47,13 @@ class MySQLDatabase:
             result = cursor.fetchall()
             return result
 
+    def get_dialog(self, session_name):
+        with self.connection.cursor() as cursor:
+            sql = "SELECT * FROM dialogs WHERE name = %s"
+            cursor.execute(sql, (session_name,))
+            result = cursor.fetchone()
+            return result
+
     def get_texts(self, dialog_id):
         with self.connection.cursor() as cursor:
             sql = "SELECT * FROM texts WHERE dialog_id = %s"
@@ -76,9 +83,14 @@ class MySQLDatabase:
 
     def add_dialog(self, user_id, name):
         with self.connection.cursor() as cursor:
-            sql = "INSERT INTO dialogs (user_id, name) VALUES (%s, %s)"
-            cursor.execute(sql, (user_id, name))
-        self.connection.commit()
+            try:
+                cursor.execute("START TRANSACTION")
+                sql = "INSERT INTO dialogs (user_id, name) VALUES (%s, %s)"
+                cursor.execute(sql, (user_id, name))
+                cursor.execute("COMMIT")
+            except Exception as e:
+                cursor.execute("ROLLBACK")
+                raise
 
     def delete_text(self, text_id):
         with self.connection.cursor() as cursor:

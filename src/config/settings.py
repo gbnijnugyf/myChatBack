@@ -1,1 +1,1 @@
-AUTH_TOKEN_NAME = 'token'
+AUTH_COOKIE_NAME = 'sign'
