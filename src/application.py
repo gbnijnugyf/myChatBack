@@ -3,6 +3,7 @@ from flask_cors import CORS
 import logging
 import click
 from cryptography.fernet import Fernet
+
 from src.libs.db import MySQLDatabase
 from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime, timedelta
@@ -48,6 +49,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # save_image_to_file()
     try:
         import sys
         from www import *

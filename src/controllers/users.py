@@ -1,3 +1,7 @@
+import base64
+import os
+from uuid import uuid4
+
 from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime, timedelta
 from src.application import db, cipher_suite
@@ -56,7 +60,20 @@ def get_pre_session_records(user_id):
         texts = db.get_texts(dialog['dialog_id'])
 
         # 构造SessionTextDTO对象
-        session_texts = [SessionTextDTO(from_=text['is_ai'], text=text['message']).to_dict() for text in texts]
+        session_texts = []
+        for text in texts:
+            if text['has_img'] == 1:
+                imgPath = db.get_image(text['text_id'])
+                img = image_to_base64(imgPath);
+                # save_image_to_file(img, f"./static/userImages/" + str(uuid4()) + ".jpg")
+            else:
+                img = None
+
+            session_texts.append(SessionTextDTO(from_=text['is_ai'], text=text['message'], image=img).to_dict())
+
+        # 构造SessionTextDTO对象
+        # session_texts = [SessionTextDTO(from_=text['is_ai'], text=text['message'],
+        #                                 img=db.get_image_as_base64(text['text_id'])).to_dict() for text in texts]
 
         # 构造SessionRecordDTO对象
         record = SessionRecordDTO(
@@ -70,3 +87,15 @@ def get_pre_session_records(user_id):
         pre_session_records.append(record.to_dict())
 
     return pre_session_records
+
+
+def image_to_base64(file_path):
+    with open(file_path, 'rb') as f:
+        image_data = f.read()
+    base64_string = base64.b64encode(image_data).decode()
+    return 'data:image/jpeg;base64,' + base64_string
+
+# def save_image_to_file(image_data, file_path):
+#     if image_data is not None:
+#         with open(file_path, 'wb') as file:
+#             file.write(base64.b64decode(image_data))

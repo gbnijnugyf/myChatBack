@@ -36,6 +36,7 @@ def cookie_check(func):
             return func(*args, **kwargs)
 
         except Exception as e:
+            print(e)
             returnDTO = ReturnDTO.from_dict({"msg": str(e), "status": 0}).to_dict()
             return jsonify(returnDTO)
 

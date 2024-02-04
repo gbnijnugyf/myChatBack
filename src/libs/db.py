@@ -1,3 +1,6 @@
+import base64
+import binascii
+
 import pymysql
 
 
@@ -22,7 +25,6 @@ class MySQLDatabase:
             sql = "CALL sign_in(%s, %s)"
             cursor.execute(sql, (account, password))
             result = cursor.fetchone()
-            print(result)
             if (result['result'] == 0):
                 return 0
             else:
@@ -72,8 +74,7 @@ class MySQLDatabase:
         with self.connection.cursor() as cursor:
             sql = "SELECT * FROM images WHERE dialog_id = %s ORDER BY time DESC LIMIT 1"
             cursor.execute(sql, (dialog_id,))
-            result = cursor.fetchone()
-            return result
+            return cursor.fetchone()['image']
 
     def delete_dialog(self, dialog_id):
         with self.connection.cursor() as cursor:
@@ -100,9 +101,12 @@ class MySQLDatabase:
 
     def add_text(self, dialog_id, from_, has_img, message):
         with self.connection.cursor() as cursor:
-            sql = "INSERT INTO texts (dialog_id, from, has_img, message) VALUES (%s, %s, %s, %s)"
+            sql = "INSERT INTO texts (dialog_id, is_ai, has_img, message) VALUES (%s, %s, %s, %s)"
             cursor.execute(sql, (dialog_id, from_, has_img, message))
+            cursor.execute("SELECT LAST_INSERT_ID()")
+            text_id = cursor.fetchone()['LAST_INSERT_ID()']  # 获取刚插入的文本的ID
         self.connection.commit()
+        return text_id
 
     def delete_image(self, text_id):
         with self.connection.cursor() as cursor:
@@ -116,5 +120,45 @@ class MySQLDatabase:
             cursor.execute(sql, (dialog_id, text_id, image))
         self.connection.commit()
 
+    def get_image(self, text_id):
+        with self.connection.cursor() as cursor:
+            sql = "SELECT image FROM images WHERE text_id = %s"
+            cursor.execute(sql, (text_id,))
+            return cursor.fetchone()['image']
+
     def close(self):
         self.connection.close()
+
+    def get_image_as_base64(self, text_id):
+        try:
+            with self.connection.cursor() as cursor:
+                sql = "SELECT image FROM images WHERE text_id = %s"
+                cursor.execute(sql, (text_id,))
+                result = cursor.fetchone()
+                if result is not None:
+                    image_data = result['image']
+                    # 将图片数据转换为Base64编码的字符串
+                    image_base64 = base64.b64encode(image_data).decode()
+                    return image_base64
+                else:
+                    print("No image found with the provided text_id.")
+                    return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
+    # def get_image(self, dialog_id, text_id):
+    #     try:
+    #         with self.connection.cursor() as cursor:
+    #             sql = "SELECT image FROM images WHERE dialog_id = %s AND text_id = %s"
+    #             cursor.execute(sql, (dialog_id, text_id))
+    #             result = cursor.fetchone()
+    #             if result is not None:
+    #                 image_data = result[0]
+    #                 return image_data
+    #             else:
+    #                 print("No image found with the provided dialog_id and text_id.")
+    #                 return None
+    #     except Exception as e:
+    #         print(f"Error: {e}")
+    #         return None
