@@ -11,7 +11,7 @@ chat = Blueprint("chat", __name__)
 
 @chat.route("/add", methods=["POST"])
 @cookie_check
-def add(user_id):
+def addDialog(user_id):
     # 从请求中获取参数
     # id = request.json.get('id') 有cookie了，用cookie找到的user_id更好
     session_name = request.json.get('session_name')
@@ -19,18 +19,18 @@ def add(user_id):
     print(user_id, session_name)
 
     # 在数据库中插入对话框记录
-    db.add_dialog(user_id, session_name)
-    # 获取对话框ID
-    dialogInfo = db.get_dialog(session_name)
-    print(dialogInfo['dialog_id'])
+    r = db.add_dialog(user_id, session_name)
 
-    # 返回对话框ID
-    return jsonify({"msg": "success", "status": 0, "data": {"session_id": dialogInfo['dialog_id']}})
+    if not r:
+        return jsonify({"msg": "add failed", "status": 1})
+    else:
+        # 获取对话框ID
+        return jsonify({"msg": "success", "status": 0, "data": {"session_id": str(r)}})
 
 
 @chat.route("/send", methods=["POST"])
 @cookie_check
-def send(user_id):
+def sendMessage(user_id):
     # 从请求中获取参数
     # id = request.json.get('id') 有cookie了，用cookie找到的user_id更好
     session_id = request.json.get('session_id')
@@ -40,8 +40,10 @@ def send(user_id):
     hasImage = image is not None;
     # 在数据库中插入对话框记录
     text_id = db.add_text(session_id, False, hasImage, text)
+    if not text_id:
+        return jsonify({"msg": "add failed", "status": 1})
 
-    if (hasImage):
+    if hasImage:
         # 图片转码
         # image = image_transcoding(image)
         # 生成路径
@@ -49,17 +51,44 @@ def send(user_id):
         # 保存图片到本地
         save_image_from_base64(image, path)
         # 在数据库中插入图片记录
-        db.add_image(session_id, text_id, path)
+        r = db.add_image(session_id, text_id, path)
+        if not r:
+            if not db.delete_text(text_id):
+                return jsonify({"msg": "rollback failed! bug!", "status": 1})
+
+            return jsonify({"msg": "add images failed", "status": 1})
 
     # 模型生成回复
     reply = get_reply()
     # 在数据库中插入对话框记录
-    db.add_text(session_id, True, False, reply)
+    reply_id = db.add_text(session_id, True, False, reply)
+    if not reply_id:
+        if not db.delete_text(text_id):
+            return jsonify({"msg": "rollback failed! bug!", "status": 1})
+        return jsonify({"msg": "add reply failed", "status": 1})
 
     # 返回对话框ID
     return jsonify({"msg": "success", "status": 0, "data": {"text": reply}})
 
 
+@chat.route("/delete", methods=["DELETE"])
+@cookie_check
+def deleteDialog(user_id):
+    # 从请求中获取参数
+    # id = request.json.get('id') 有cookie了，用cookie找到的user_id更好
+    session_id = request.args.get('session_id')
+
+    # 在数据库中删除对话框记录
+    r = db.delete_dialog(session_id)
+
+    # 根据结果返回响应
+    if r:
+        return jsonify({"msg": "success", "status": 0, })
+    else:
+        return jsonify({"msg": "delete failed", "status": 1, })
+
+
+# 连接模型生成回复，传入历史对话数组和最新图片
 def get_reply():
     reply = ''
     # 模型处理......
@@ -87,6 +116,8 @@ def get_reply():
 
 def save_image_from_base64(base64_string, file_path):
     base64_string = base64_string.split(",")[-1]  # 删除数据URI的前缀
+    while len(base64_string) % 4 != 0:
+        base64_string += '='
     image_data = base64.b64decode(base64_string)
     with open(file_path, 'wb') as f:
         f.write(image_data)
