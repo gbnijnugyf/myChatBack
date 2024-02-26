@@ -59,7 +59,7 @@ def sendMessage(user_id):
             return jsonify({"msg": "add images failed", "status": 1})
 
     # 模型生成回复
-    reply = get_reply()
+    reply = get_reply(text_id)
     # 在数据库中插入对话框记录
     reply_id = db.add_text(session_id, True, False, reply)
     if not reply_id:
@@ -89,8 +89,8 @@ def deleteDialog(user_id):
 
 
 # 连接模型生成回复，传入历史对话数组和最新图片
-def get_reply():
-    reply = ''
+def get_reply(text_id):
+    message, image = db.get_latest_messages_and_image(text_id)
     # 模型处理......
     reply = '你好,我不是AI'
 

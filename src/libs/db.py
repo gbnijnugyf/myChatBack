@@ -157,6 +157,44 @@ class MySQLDatabase:
             cursor.execute(sql, (text_id,))
             return cursor.fetchone()['image']
 
+    def get_latest_messages_and_image(self, text_id):
+        try:
+            with self.connection.cursor() as cursor:
+                # 查询text_id对应的dialog_id
+                sql = "SELECT dialog_id FROM texts WHERE text_id = %s AND is_del = 0"
+                cursor.execute(sql, (text_id,))
+                result = cursor.fetchone()
+                if result is None:
+                    print(f"No dialog found for text_id {text_id}")
+                    return None
+                dialog_id = result[0]
+
+                # 查询最新的20条记录
+                sql = """
+                SELECT * FROM texts 
+                WHERE dialog_id = %s AND is_del = 0 
+                ORDER BY time DESC 
+                LIMIT 20
+                """
+                cursor.execute(sql, (dialog_id,))
+                messages = cursor.fetchall()
+
+                # 查询最新的一张图片
+                sql = """
+                SELECT * FROM images 
+                WHERE dialog_id = %s AND is_del = 0 
+                ORDER BY time DESC 
+                LIMIT 1
+                """
+                cursor.execute(sql, (dialog_id,))
+                image = cursor.fetchone()
+
+            self.connection.commit()
+            return messages, image
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
     def close(self):
         self.connection.close()
 
