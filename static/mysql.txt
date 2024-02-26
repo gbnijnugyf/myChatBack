@@ -17,36 +17,46 @@ email CHAR(20)
 CREATE TABLE dialogs (
     dialog_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    message VARCHAR(500),
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_user BOOLEAN,
+    name CHAR(20), -- 对话框名字
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 创建时间
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE texts (
+    text_id INT AUTO_INCREMENT PRIMARY KEY,
+    dialog_id INT,
+    from BOOLEAN, -- 0表示用户，1表示机器
+    has_img BOOLEAN, -- 0表示没有图片，1表示有图片
+    message VARCHAR(500), -- 消息内容
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 发送时间
+    FOREIGN KEY (dialog_id) REFERENCES dialogs(dialog_id) ON DELETE CASCADE
 );
 
 CREATE TABLE images (
     image_id INT AUTO_INCREMENT PRIMARY KEY,
     dialog_id INT,
+    text_id INT,
     image MEDIUMBLOB,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (dialog_id) REFERENCES dialogs(dialog_id) ON DELETE CASCADE
+    FOREIGN KEY (text_id) REFERENCES texts(text_id) ON DELETE CASCADE
 );
 
 % 登陆验证用户
-delimiter $$
-create procedure sign_in
-(in account char(15),in pass_word char(20))
-begin
-declare temp_account char(15);
-declare temp_password char(20);
-declare result tinyint;
-select account_name into temp_account from users;
-select password into temp_password from users;
-IF account=temp_account and pass_word=temp_password then
-set result=1;
-else
-set result=0;
-end if;
-select result;
-end$$
-delimiter ;
+DELIMITER $$
+USE `my_chat`$$
+DROP PROCEDURE IF EXISTS `sign_in`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sign_in`(IN account CHAR(15),IN pass_word CHAR(20))
+BEGIN
+DECLARE temp_account CHAR(15);
+DECLARE temp_password CHAR(20);
+DECLARE result INT DEFAULT 0;
+SELECT account_name, PASSWORD, user_id INTO temp_account, temp_password, result FROM users WHERE account_name = account;
+IF account=temp_account AND pass_word=temp_password THEN
+SELECT result;
+ELSE
+SELECT 0;
+END IF;
+END$$
+DELIMITER ;
 

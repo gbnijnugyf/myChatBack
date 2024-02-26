@@ -14,16 +14,18 @@ class ReturnDTO:
 
 
 class SessionTextDTO:
-    def __init__(self, from_, text):
+    def __init__(self, from_, text, image):
         self.from_ = from_
         self.text = text
+        self.image = image
 
     def to_dict(self):
-        return self.__dict__
+        # print(self.from_, self.text, self.image)
+        return {"from": self.from_, "text": self.text, "image": self.image}
 
     @classmethod
     def from_dict(cls, dict_obj):
-        return cls(**dict_obj)
+        return cls(from_=bool(dict_obj.get('from')), text=dict_obj.get('text'), image=dict_obj.get('image'))
 
 
 class SessionRecordDTO:
