@@ -64,7 +64,7 @@ def get_pre_session_records(user_id):
         for text in texts:
             if text['has_img'] == 1:
                 imgPath = db.get_image(text['text_id'])
-                img = image_to_base64(imgPath);
+                img = image_to_base64(imgPath)
                 # save_image_to_file(img, f"./static/userImages/" + str(uuid4()) + ".jpg")
             else:
                 img = None

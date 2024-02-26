@@ -163,11 +163,10 @@ class MySQLDatabase:
                 # 查询text_id对应的dialog_id
                 sql = "SELECT dialog_id FROM texts WHERE text_id = %s AND is_del = 0"
                 cursor.execute(sql, (text_id,))
-                result = cursor.fetchone()
-                if result is None:
+                dialog_id = cursor.fetchone()['dialog_id']
+                if dialog_id is None:
                     print(f"No dialog found for text_id {text_id}")
                     return None
-                dialog_id = result[0]
 
                 # 查询最新的20条记录
                 sql = """
@@ -188,7 +187,8 @@ class MySQLDatabase:
                 """
                 cursor.execute(sql, (dialog_id,))
                 image = cursor.fetchone()
-
+                if image is not None:
+                    image = image['image']
             self.connection.commit()
             return messages, image
         except Exception as e:

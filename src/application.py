@@ -32,6 +32,8 @@ cipher_suite = Fernet(key)  # 使用密钥创建一个Fernet加密套件。
 # 初始化你的数据库类
 db = MySQLDatabase(host='127.0.0.1', user='root', password='123456', db='my_chat')
 
+db.get_latest_messages_and_image(3)
+
 
 @app.cli.command()
 def initdb():
@@ -46,7 +48,6 @@ def runserver():
 
 def main():
     app.run(debug=True)
-
 
 if __name__ == "__main__":
     # save_image_to_file()
