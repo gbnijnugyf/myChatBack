@@ -91,8 +91,13 @@ def deleteDialog(user_id):
 # 连接模型生成回复，传入历史对话数组和最新图片
 def get_reply(text_id):
     message, image = db.get_latest_messages_and_image(text_id)
+    print(message, image)
+    # 转为二维list
+    msgList = [[item['is_ai'], item['message']] for item in message]
+    print(msgList, image)
+
     # 模型处理......
-    reply = '你好,我不是AI'
+    reply = '你好,这条是测试，日期：2.26'
 
     return reply
 
