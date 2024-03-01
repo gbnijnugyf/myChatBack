@@ -4,12 +4,15 @@ from uuid import uuid4
 
 from flask import Blueprint, request, jsonify, make_response
 from datetime import datetime, timedelta
-from src.application import db, cipher_suite
-from src.interceptors.auth import cookie_check
-from src.models.DTO import ReturnDTO, SessionTextDTO, SessionRecordDTO, DataDTO
+from application import db, cipher_suite
+from interceptors.auth import cookie_check
+from models.DTO import ReturnDTO, SessionTextDTO, SessionRecordDTO, DataDTO
 
 user = Blueprint("user", __name__)
 
+@user.route('/',methods=["GET"])
+def home():
+    return "已启动"
 
 @user.route("/login", methods=["POST"])
 # @cookie_check
@@ -44,6 +47,7 @@ def login():
 
         return response
     except Exception as e:
+        print(e)
         returnDTO = ReturnDTO.from_dict({"msg": str(e), "status": 0}).to_dict()
         return jsonify(returnDTO)
 

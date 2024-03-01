@@ -4,17 +4,18 @@ import logging
 import click
 from cryptography.fernet import Fernet
 
-from src.libs.db import MySQLDatabase
-from flask import Blueprint, request, jsonify, make_response
-from datetime import datetime, timedelta
-from src.models.DTO import ReturnDTO
+from libs.db import MySQLDatabase
+# from flask import Blueprint, request, jsonify, make_response
+# from datetime import datetime, timedelta
+# from models.DTO import ReturnDTO
 
 
 app = Flask(__name__, static_folder="../static", static_url_path="/static")
 CORS(app)
 app.config.from_pyfile("config/settings.py")
 
-handler = logging.FileHandler("./logs/app.log", encoding="UTF-8")
+# handler = logging.FileHandler("../root/autodl-tmp/myChat/myChat/logs/app.log", encoding="UTF-8")
+handler = logging.FileHandler("/root/autodl-tmp/myChat/myChat/logs/app.log", encoding="UTF-8")
 handler.setLevel(
     logging.DEBUG
 )  # 设置日志记录最低级别为DEBUG，低于DEBUG级别的日志记录会被忽略，不设置setLevel()则默认为NOTSET级别。
@@ -25,15 +26,41 @@ handler.setFormatter(logging_format)
 app.logger.addHandler(handler)
 
 # hostname = "http://" + str(socket.gethostbyname(socket.gethostname())) + ":5000"
-hostname = "http://localhost:5000"
+# hostname = "http://localhost:6006"
 key = Fernet.generate_key()  # 生成一个Fernet加密密钥。
 cipher_suite = Fernet(key)  # 使用密钥创建一个Fernet加密套件。
 
 # 初始化你的数据库类
+# db = MySQLDatabase(host='127.0.0.1', user='root', password='123456', db='my_chat')
 db = MySQLDatabase(host='127.0.0.1', user='root', password='123456', db='my_chat')
 
-db.get_latest_messages_and_image(3)
 
+# import sys
+# sys.path.append('/root/autodl-tmp/LLaVA/')
+# from MultiRoundModel import MultiRoundModel
+# model = MultiRoundModel()
+
+# ### Test Model
+# inputText = [[0,"What's your name"],
+#              [1,"My name is LLaVA"],
+#              [0,"Where is Beijing and what is in the picture?"]]
+
+# outputs = model.arrayConversation(inputText,"/root/autodl-tmp/LLaVA/R.jpg")
+# print("Model :",outputs)
+
+# print("\n\n     Model is OK! \n\n")
+# ### end Test Model
+
+
+# 运行前模型测试 begin
+# message, image = db.get_latest_messages_and_image(3)
+# print(message, image)
+# # 转为二维list
+# msgList = [[item['is_ai'], item['message']] for item in message]
+# print(msgList, image)
+# # 模型处理......
+# print(model.arrayConversation(msgList,image))
+# 运行前模型测试 end
 
 @app.cli.command()
 def initdb():
@@ -47,10 +74,11 @@ def runserver():
 
 
 def main():
-    app.run(debug=True)
+    app.run(host="127.0.0.1", port=6006,debug=True)
 
 if __name__ == "__main__":
     # save_image_to_file()
+    # model = MultiRoundModel()
     try:
         import sys
         from www import *
