@@ -1,8 +1,8 @@
 from flask import request, jsonify
 from datetime import datetime
 
-from src.application import app, cipher_suite, db
-from src.models.DTO import ReturnDTO
+from application import app, cipher_suite, db
+from models.DTO import ReturnDTO
 from functools import wraps
 
 

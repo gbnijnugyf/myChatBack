@@ -77,6 +77,8 @@ class MySQLDatabase:
             return cursor.fetchone()['image']
 
     def delete_dialog(self, dialog_id):
+        if dialog_id is None:
+            return False
         try:
             with self.connection.cursor() as cursor:
                 sql = "UPDATE dialogs SET is_del = 1 WHERE dialog_id = %s"
